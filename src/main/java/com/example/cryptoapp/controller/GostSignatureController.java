@@ -10,7 +10,7 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
-@CrossOrigin(origins = {"http://localhost:4200", "http://localhost:8080"})
+@CrossOrigin(origins = {"https://yourcryptoapp.netlify.app/sign", "https://cryptoapp-1-w7m2.onrender.com"})
 @RestController
 @RequestMapping("/api")
 public class GostSignatureController {
