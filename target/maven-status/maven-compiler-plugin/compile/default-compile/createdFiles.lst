@@ -1,0 +1,3 @@
+com\example\cryptoapp\CryptoApplication.class
+com\example\cryptoapp\PingController.class
+com\example\cryptoapp\controller\GostSignatureController.class
