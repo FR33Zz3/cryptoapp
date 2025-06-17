@@ -13,25 +13,18 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
-@CrossOrigin(origins = {"https://yourcryptoapp.netlify.app", "http://85.235.205.223:8080"},
-            methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.OPTIONS},
-            allowedHeaders = {"Content-Type"})
+@CrossOrigin(
+        origins = {"https://yourcryptoapp.netlify.app", "http://85.235.205.223:8080"},
+        methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.OPTIONS},
+        allowedHeaders = "*",
+        allowCredentials = "false"
+)
 @RestController
 @RequestMapping("/api")
 public class GostSignatureController {
 
     static {
         Security.addProvider(new BouncyCastleProvider());
-    }
-
-    @RequestMapping(value = "/sign", method = RequestMethod.OPTIONS)
-    public ResponseEntity<?> handleSignOptions() {
-        return ResponseEntity.ok().build();
-    }
-
-    @RequestMapping(value = "/verify", method = RequestMethod.OPTIONS)
-    public ResponseEntity<?> handleVerifyOptions() {
-        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/sign")
@@ -56,10 +49,9 @@ public class GostSignatureController {
             response.put("signature", Base64.getEncoder().encodeToString(signatureBytes));
             response.put("publicKey", Base64.getEncoder().encodeToString(keyPair.getPublic().getEncoded()));
 
-            return ResponseEntity.ok()
-                    .header("Access-Control-Allow-Origin", "*")
-                    .body(response);
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
+            e.printStackTrace(); // Можно временно оставить для отладки
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Signature generation failed: " + e.getMessage()));
         }
@@ -73,7 +65,7 @@ public class GostSignatureController {
             String publicKeyStr = payload.get("publicKey");
 
             if (document == null || signatureStr == null || publicKeyStr == null) {
-                return ResponseEntity.badRequest().body(Map.of("isValid", false));
+                return ResponseEntity.badRequest().body(Map.of("isValid", false, "error", "Missing input fields"));
             }
 
             byte[] publicKeyBytes = Base64.getDecoder().decode(publicKeyStr);
@@ -86,10 +78,9 @@ public class GostSignatureController {
             byte[] signatureBytes = Base64.getDecoder().decode(signatureStr);
             boolean isValid = signature.verify(signatureBytes);
 
-            return ResponseEntity.ok()
-                    .header("Access-Control-Allow-Origin", "*")
-                    .body(Map.of("isValid", isValid));
+            return ResponseEntity.ok(Map.of("isValid", isValid));
         } catch (Exception e) {
+            e.printStackTrace(); // Можно временно оставить
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("isValid", false, "error", e.getMessage()));
         }
@@ -97,6 +88,7 @@ public class GostSignatureController {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, String>> handleAllExceptions(Exception ex) {
+        ex.printStackTrace(); // логирование
         Map<String, String> response = new HashMap<>();
         response.put("error", ex.getMessage());
         response.put("status", "error");
